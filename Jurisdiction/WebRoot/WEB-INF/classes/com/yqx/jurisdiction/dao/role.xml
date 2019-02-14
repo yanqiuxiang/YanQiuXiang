@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yqx.jurisdiction.dao.RoleDao">
+	
+	<!-- 获取所有角色  -->
+	<select id="getRealNameRole" resultType="com.yqx.jurisdiction.entity.Role">
+		SELECT 
+			*
+		FROM
+			ROLE	
+		WHERE 
+			ROLE_ID!=1
+		  	order by role_id 	
+	</select>
+	
+	<!-- 获取所有角色  -->
+	<select id="getRealNameByStatus" resultType="com.yqx.jurisdiction.entity.Role">
+		SELECT 
+			*
+		FROM
+			ROLE	
+		WHERE 
+			ROLE_ID!=1 and  ROLE_STATUS = 0
+		  	order by role_id 	
+	</select>
+	
+	
+	<!-- 获取某角色下的节点  -->
+	<select id="getNodeByRole" resultType="com.yqx.jurisdiction.entity.Role">
+		SELECT  
+		            
+		       n.node_id,n.node_pid,n.node_title ,
+		       CASE WHEN (select role_id from ROLE_NODE r where role_id = #{role} and  r.node_id = n.node_id  ) >0 THEN  '1'  ELSE '0' END as R_STATUS
+		FROM 
+               NODE n
+	</select>
+	
+	<!-- 新增角色 -->
+	<select id="addRole" statementType="CALLABLE" parameterType="java.util.Map" resultType="String"> 
+ 			{call ADDROLE_CALL(#{nodeIds, mode=IN, jdbcType=VARCHAR}, #{role_name, mode=IN, jdbcType=VARCHAR},
+			#{role_access, mode=IN, jdbcType=VARCHAR}, 	
+			#{role_remark, mode=IN, jdbcType=VARCHAR}, 	
+			#{role_receive, mode=IN, jdbcType=INTEGER}, 			
+ 			#{v_msg, mode=OUT, jdbcType=VARCHAR})
+ 			}
+	</select>
+    
+    <!-- 删除角色 -->
+	<select id="delRole" statementType="CALLABLE" parameterType="java.util.Map" resultType="String"> 
+ 			{call DELROLE_CALL(#{roleId, mode=IN, jdbcType=INTEGER},#{v_msg, mode=OUT, jdbcType=VARCHAR})
+ 			}
+	</select>
+	
+	<!-- 修改角色状态 -->
+	<update id="updRole">
+			UPDATE 
+				ROLE 
+			SET 
+				ROLE_STATUS = #{status}
+			WHERE 
+				ROLE_ID= #{roleId}
+	</update>
+	
+	<!-- 根据角色编号获取角色信息 -->
+	<select id="getRoleById"  resultType="com.yqx.jurisdiction.entity.Role">
+		SELECT 
+		      *
+		FROM
+		      ROLE
+		WHERE
+		      ROLE_ID = #{roleId}  
+	</select>
+	
+	<!-- 修改角色信息  -->
+	<select id="updRoleById" statementType="CALLABLE" parameterType="java.util.Map" resultType="String"> 
+ 			{call UPDROLE_CALL(#{nodeIds, mode=IN, jdbcType=VARCHAR},#{roleId, mode=IN, jdbcType=INTEGER},
+ 			#{roleName, mode=IN, jdbcType=VARCHAR},#{roleAccess, mode=IN, jdbcType=VARCHAR},
+ 			#{roleRemark, mode=IN, jdbcType=VARCHAR},#{roleReceive, mode=IN, jdbcType=INTEGER},#{v_msg, mode=OUT, jdbcType=VARCHAR})
+ 			}
+	</select>
+	
+</mapper>

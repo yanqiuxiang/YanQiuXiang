@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yqx.jurisdiction.dao.NodeDao">
+	
+	<!-- 根据系统获取超级用户所有权限模块   (模块所属系统(0,系统模块 1 经销商模块))  -->
+	<select id="getAllNodeByAdmin" resultType="com.yqx.jurisdiction.entity.Node">
+		SELECT 
+			* 
+		FROM 
+			NODE 
+		WHERE
+			1=1
+			 <if test="nodeStatus==0">
+			 	AND NODE_STATUS = 0	
+			 </if>
+			<if test="nodeStatus==1">
+			 	AND NODE_STATUS = 1	
+			 </if>
+		ORDER BY 
+			node_pid,node_sort	
+	</select>
+	<select id="getRoleNode" resultType="com.yqx.jurisdiction.entity.Node">
+		SELECT 
+	      	* 
+	    FROM 
+	      	NODE 
+	    WHERE
+	      	1=1
+		  	 <if test="nodeStatus==0">
+			 	AND NODE_STATUS = 0	
+			 </if>
+			<if test="nodeStatus==1">
+			 	AND NODE_STATUS = 1	
+			</if>
+		    AND
+		    	node_id IN(
+	            	SELECT 
+	            		node_id 
+	            	FROM 
+	            		ROLE_NODE 
+	            	WHERE 
+	            		role_id= #{roleId}
+	            UNION ALL
+	            	SELECT 
+	            		node_pid 
+	            	FROM 
+	            		NODE  
+	            	WHERE 
+	            		node_id IN(SELECT node_id FROM ROLE_NODE WHERE role_id= #{roleId})  or node_pid = 1  
+	          	) 
+			ORDER BY 
+	       node_pid,node_sort  
+	</select>
+	
+	<!-- start -->
+	
+	<!-- 获取所有模板信息 -->
+	<select id="getAllNode" resultType="com.yqx.jurisdiction.entity.Node">
+		SELECT 
+		       NODE_ID,NODE_TITLE,NODE_ICO,NODE_URL,NODE_SORT,NODE_PID,
+		       (select node_title from NODE where node_id =p.node_pid) as P_TITLE,NODE_STATUS,NODE_REMARK 
+		FROM 
+		       NODE  p   
+		ORDER BY 
+		      node_id,node_sort
+	</select>
+		
+	<!-- 获取一级菜单节点 -->
+	<select id="getSysNodeTree" resultType="com.yqx.jurisdiction.entity.Node">
+		SELECT 
+			NODE_ID,NODE_TITLE 
+		FROM 
+			NODE  
+		WHERE 
+			node_pid in(0,1)
+	</select>
+	<!-- 增加模块 -->
+	<insert id="addNode" parameterType="com.yqx.jurisdiction.entity.Node">
+		INSERT INTO 
+		      NODE
+		        (NODE_PID,NODE_TITLE,NODE_URL,NODE_ICO,NODE_STATUS,NODE_SORT,NODE_REMARK)
+		VALUES
+			  (#{NODE_PID},#{NODE_TITLE},#{NODE_URL},#{NODE_ICO},#{NODE_STATUS},#{NODE_SORT},#{NODE_REMARK})
+	</insert>
+	
+	<!-- 获取模块信息-->
+	<select id="getNodeById" resultType="com.yqx.jurisdiction.entity.Node">
+		SELECT 
+			* 
+		FROM 
+			NODE 
+		WHERE 
+			NODE_ID = #{node_id}
+	</select>
+	<update id="updNode" parameterType="com.yqx.jurisdiction.entity.Node">
+		UPDATE 
+			NODE 
+		SET 
+			NODE_PID = #{NODE_PID}, NODE_TITLE=#{NODE_TITLE},
+			NODE_URL = #{NODE_URL},NODE_SORT = #{NODE_SORT},
+			NODE_REMARK=#{NODE_REMARK}
+		WHERE 
+			NODE_ID = #{NODE_ID}
+	</update>
+	<!-- 删除节点 -->
+	<select id="delNode" statementType="CALLABLE" parameterType="java.util.Map" resultType="String"> 
+ 			{call DELNODE_CALL(#{nodeId, mode=IN, jdbcType=INTEGER},#{v_msg, mode=OUT, jdbcType=VARCHAR})
+ 			}
+	</select>
+	<!-- 修改节点状态(并修改所有该节点下子节点状态) -->
+	<update id="updNodeStatus">
+			UPDATE 
+				NODE 
+			SET  
+				NODE_STATUS = #{status} 
+			WHERE 
+				NODE_PID IN  (SELECT t.NODE_ID FROM(SELECT NODE_ID FROM NODE WHERE NODE_PID = #{node_id})t)  OR  NODE_ID =#{node_id} OR NODE_PID=#{node_id}
+	</update>
+</mapper>

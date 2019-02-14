@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans  
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-3.2.xsd 
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx.xsd 
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd">
+		
+		<!-- 件上传视图解析器，它的名字必须为multipartResolver -->
+  	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="10485760"/><!-- 10M -->
+		 <!--resolveLazily属性启用是为了推迟文件解析，以便在UploadAction 中捕获文件大小异常-->  
+        <property name="resolveLazily" value="true"/> 
+	</bean>
+	<!-- scan the package and the sub package -->
+    <context:component-scan base-package="com.yqx"/>
+    
+    <mvc:default-servlet-handler />
+     
+     <!--  
+	<mvc:interceptors>  
+		<mvc:interceptor>    
+			<mvc:mapping path="/adminUser/*"/> 
+			<mvc:mapping path="/adminNode/*"/> 
+			<mvc:mapping path="/adminRole/*"/> 
+			<mvc:mapping path="/realNameManage/*"/> 
+			<mvc:mapping path="/groupManage/*"/> 
+			<mvc:mapping path="/modelManage/*"/> 
+			<mvc:mapping path="/userPay/*"/> 
+			<mvc:mapping path="/userOrders/*"/> 
+			<bean class="com.weixungu.realname.interceptor.LoginInterceptor"/>   
+		</mvc:interceptor>   
+	</mvc:interceptors> 
+	-->
+
+    <!-- if you use annotation you must configure following setting -->
+    <mvc:annotation-driven />
+    <!-- configure the InternalResourceViewResolver -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" id="internalResourceViewResolver">
+        <!-- 前缀 -->
+        <property name="prefix" value="/WEB-INF/views/" />
+        <!-- 后缀 -->
+        <property name="suffix" value=".jsp" />
+    </bean>
+    
+    <context:property-placeholder location="classpath:jdbc.properties" />
+    <mvc:resources location="${resource.css}" mapping="/css/**" />
+	<mvc:resources location="${resource.js}" mapping="/js/**" />
+	<mvc:resources location="${resource.images}" mapping="/images/**" />
+  	
+ 	<bean id="dataSource"  class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}"></property>
+		<property name="jdbcUrl" value="${jdbc.url}"></property>
+		<property name="user" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+		<property name="maxPoolSize" value="${jdbc.maxpoolsize}"></property>
+		<property name="minPoolSize" value="${jdbc.minpoolsize}"></property>
+		<property name="initialPoolSize" value="${jdbc.initialpoolsize}"></property>
+		<property name="maxIdleTime" value="${jdbc.maxidletime}"></property>
+		<property name="testConnectionOnCheckin" value="true" > </property> 
+    	<property name="idleConnectionTestPeriod" value="60" >  </property> 
+   		<property name="preferredTestQuery" value="${jdbc.validationQuery}"></property> 
+	</bean>
+	
+	
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+	
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:com/yqx/jurisdiction/dao/mybatis-config.xml" />
+	</bean>
+	 
+	
+	<!-- 节点 -->
+	<bean id="realNameNodeDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.yqx.jurisdiction.dao.NodeDao" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	
+	<bean id="realNameNode" class="com.yqx.jurisdiction.business.impl.NodeMapperImpl">
+		<constructor-arg ref="realNameNodeDao" />
+	</bean>
+	
+	
+	<!-- 用户 -->
+	<bean id="realNameUserDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.yqx.jurisdiction.dao.UserDao" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="realNameUser" class="com.yqx.jurisdiction.business.impl.UserMapperImpl">
+		<constructor-arg ref="realNameUserDao" />
+	</bean>
+	
+	
+	<!-- 角色 -->
+	<bean id="realNameRoleDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.yqx.jurisdiction.dao.RoleDao" />
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="realNameRole" class="com.yqx.jurisdiction.business.impl.RoleMapperImpl">
+		<constructor-arg ref="realNameRoleDao" />
+	</bean>
+	
+	
+	
+	
+	
+	<bean name="factory" class="com.yqx.jurisdiction.controller.BusinessFactory">
+		<constructor-arg>
+			<map>
+				<entry key="realNameNode" value-ref="realNameNode" />
+				<entry key="realNameUser" value-ref="realNameUser" />
+				<entry key="realNameRole" value-ref="realNameRole" />
+			</map>
+		</constructor-arg>
+	</bean>	
+	
+</beans>

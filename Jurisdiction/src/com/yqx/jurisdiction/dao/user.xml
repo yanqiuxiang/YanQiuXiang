@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yqx.jurisdiction.dao.UserDao">
+	
+	<!-- 登录 -->
+	<select id="login" resultType="com.yqx.jurisdiction.entity.Users">
+		SELECT 
+		      USER_ID,USER_ACCOUNT,USER_PASSWORD,r.role_status,USER_NAME,USER_MAIL,
+		      USER_ROLE,DATE_FORMAT(USER_CREATDATE,'%Y-%m-%d %H:%i:%s') as USER_CREATEDATE , 
+		      DATE_FORMAT(USER_LASTDATE,'%Y-%m-%d %H:%i:%s') as  USER_LASTDATE ,USER_STATUS, r.role_id,
+		      PERMISSION_ONE,PERMISSION_TWO ,USER_PHONE,USER_CREATE_STATUS
+	    FROM 
+		      USERS t,
+		      ROLE r
+		WHERE
+		      t.role_id = r.role_id 
+		AND
+			  user_account =  #{userName}
+		AND  
+			  user_password  =  #{passWord} 
+	</select>
+	
+	<!-- 修改最后登录时间 -->
+	<update id="updLoginTime">
+		UPDATE 
+			USERS 
+		SET  
+			USER_LASTDATE = now()
+		WHERE 
+			USER_ID = #{user_id}
+	</update>
+	<select id="getAllUser" resultType="com.yqx.jurisdiction.entity.Users">
+		SELECT 
+			USER_ID,USER_ACCOUNT,DATE_FORMAT(USER_CREATDATE,'%Y-%m-%d %H:%i:%s') as USER_CREATDATE,
+	      DATE_FORMAT(USER_LASTDATE,'%Y-%m-%d %H:%i:%s') as USER_LASTDATE,
+	      USER_STATUS,USER_ROLE,USER_MAIL,USER_PHONE,USER_NAME 
+		FROM 
+			USERS 
+		WHERE 
+			USER_ID !=0
+	</select>
+	<!-- 修改用户状态 -->
+	<update id="updUserStatus">
+		UPDATE
+			USERS
+		SET
+			USER_STATUS = #{USER_STATUS}
+		WHERE
+			USER_ID = #{USER_ID}		
+	</update>
+	
+	
+	<!-- 新增用户信息  -->
+	<insert id="addUser">  
+		INSERT INTO 
+		       USERS(USER_ACCOUNT,USER_PASSWORD,USER_NAME,ROLE_ID,USER_ROLE,USER_CREATDATE,USER_STATUS,USER_MAIL,USER_PHONE,USER_CREATE_STATUS)
+		VALUES(#{USER_ACCOUNT},#{USER_PASSWORD},#{USER_NAME},#{ROLE_ID},#{userExplain},now(),0,#{USER_MAIL},#{USER_PHONE},#{addRealName})
+	</insert>
+	<!-- 根据用户ID获取用户信息 -->
+	<select id="getUserById" resultType="com.yqx.jurisdiction.entity.Users">
+		SELECT 
+			* 
+		FROM 
+			USERS 
+		WHERE 
+			USER_ID = #{userId}
+	</select>
+	<!-- 修改用户权限 -->
+	<update id="updUserByRole">
+		UPDATE
+			USERS
+		SET
+			ROLE_ID = #{ROLE_ID},
+			USER_ROLE = #{USER_ROLE},
+			USER_NAME = #{USER_NAME},
+			USER_MAIL = #{USER_MAIL},
+			USER_PHONE = #{USER_PHONE},
+			USER_CREATE_STATUS = #{addRealName}
+		WHERE
+			USER_ID = #{USER_ID}		
+	</update>
+	<!-- 修改用户状态 -->
+	<delete id="delUser">
+		DELETE
+			FROM
+		 		USERS
+		 WHERE
+		 		USER_ID = #{USER_ID}	
+	</delete>
+	
+	<update id="updPassword">
+		UPDATE
+			USERS
+		SET
+			USER_PASSWORD = #{uPassword}
+		WHERE
+			USER_ID = #{userid}	
+	</update>
+	<!-- 通过用户账号获取用户邮箱 -->
+	<select id="getMailByUserName" resultType="String">
+	    SELECT 
+	    	USER_MAIL||','||USER_ID  
+	    FROM 
+	    	USERS 
+	    WHERE 
+	    	USER_ACCOUNT = #{userName}
+	</select>
+	<!-- 查询用户账号是否存在 -->
+	<select id="getCountUserByName" resultType="Integer">
+		SELECT 
+			COUNT(*) 
+		FROM 
+			USERS 
+	    WHERE 
+	    	USER_ACCOUNT = #{userName}
+	</select>
+	
+	<!-- 获取所有用户信息  -->
+	<select id="getUserAll" resultType="com.yqx.jurisdiction.entity.Users">
+		SELECT * FROM USERS
+	</select>
+</mapper>
